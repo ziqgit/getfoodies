@@ -6,7 +6,7 @@
 
 // Set the database access information as constants:
 DEFINE ('DB_USER', 'u248146355_hatihati');
-DEFINE ('DB_PASSWORD', 'Haziqfizi1');
+DEFINE ('DB_PASSWORD', 'Haziqfizi!');
 DEFINE ('DB_HOST', 'localhost');
 DEFINE ('DB_NAME', 'u248146355_catering');
 
