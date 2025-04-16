@@ -1,32 +1,3 @@
-<?php
-        header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none';");
-?> 
-<?php
-session_start(); //start session to store CSRF Tokens
-
-//Generate CSRF Token
-if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-//Check if the form was submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    //CSRF Token Validation 
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION ['csrf_token']){
-        die("CSRF validation failed! Request blocked.");
-    }
-
-    //Process the form data safely
-    $first_name = htmlspecialchars($_POST['first_name']);
-    $last_name = htmlspecialchars($_POST['last_name']);
-    $email = htmlspecialchars($_POST['email']);
-    $phone_no = htmlspecialchars($_POST['phone_no']);
-    $Message = htmlspecialchars($_POST['Message']);
-
-    echo "Message sent successfully.";
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -192,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($errors)) { // If everything's OK.
 
         // Register the user in the database...
-        require ('mysqli_connect.php'); // Connect to the db.
+        require ('../mysqli_connect.php'); // Connect to the db.
 
         // Make the query:
         $q = "INSERT INTO message (first_name, last_name, email, phone_no, Message,Send_date) 
@@ -251,7 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section class="contact-form">
     <h2>Get in Touch</h2>
     <form action="ContactUs.php" method="post" class="contact-form">
-    <input type= "hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
         <label for="first_name">First Name:</label>
         <input type="text" name="first_name" id="first_name" placeholder="Your First Name" value="<?php if (isset($_POST['first_name'])) echo htmlspecialchars($_POST['first_name']); ?>" required>
 
