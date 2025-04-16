@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone_no = htmlspecialchars($_POST['phone_no']);
     $Message = htmlspecialchars($_POST['Message']);
 
-    echo "Message sent successfully."
+    echo "Message sent successfully.";
 }
 ?>
 
