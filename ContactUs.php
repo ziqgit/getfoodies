@@ -1,3 +1,7 @@
+<?php
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src 'self'; script-src 'self';");
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
