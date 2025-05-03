@@ -1,4 +1,7 @@
 <?php
+header('X-Frame-Options: DENY');
+header("Content-Security-Policy: frame-ancestors 'none';");
+
         header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none';");
         $page_title = 'Homepage';
         include ('includes/header.html');
