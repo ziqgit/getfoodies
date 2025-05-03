@@ -1,7 +1,3 @@
-<?php
-header("Content-Security-Policy: default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';");
-?>
-
 <html lang="en">
 
 <head>
