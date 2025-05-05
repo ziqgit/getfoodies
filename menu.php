@@ -1,6 +1,5 @@
 <?php
     header("X-Frame-Options:DENY");
-    header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none';");
 ?>
 <html>
   <?php
