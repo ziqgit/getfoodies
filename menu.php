@@ -1,6 +1,6 @@
-<?php
-    header("X-Frame-Options:DENY");
-?>
+<FilesMatch "\.(php)$">
+    Header set Content-Security-Policy "frame-ancestors 'none';"
+</FilesMatch>
 <html>
   <?php
         $page_title = 'Menu';
