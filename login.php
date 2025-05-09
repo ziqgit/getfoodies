@@ -35,7 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         session_regenerate_id(true);
 
         // Redirect to the logged-in page:
-        redirect_user('loggedin.php');
+        echo "Login successful!";
+        exit;
             
     } else { // Login failed
 
@@ -46,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['errors'] = htmlspecialchars(json_encode($errors), ENT_QUOTES, 'UTF-8');
 
         // Redirect back to the login form:
-        header("Location: login.php");
-        exit();
+        echo "Login failed!";
+        exit;
     }
     
     // Close the database connection securely:
