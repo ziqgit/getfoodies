@@ -3,13 +3,9 @@
 </html>
 
 <?php 
-ini_set('session.cookie_httponly', 1);
-session_start(); // Start the session.
-
-var_dump($_SESSION);
-exit;
-
 // The user is redirected here from login.php.
+
+session_start(); // Start the session.
 
 // If no session value is present, redirect the user:
 if (!isset($_SESSION['user_id'])) {
