@@ -2,6 +2,7 @@
 	<head><link rel="stylesheet" href="includes/loggedin.css" type="text/css" media="screen"/></head>
 </html>
 <?php
+ini_set('session.cookie_httponly', 1);
 // This page lets the user logout.
 // This version uses sessions.
 session_start(); // Access the existing session.
