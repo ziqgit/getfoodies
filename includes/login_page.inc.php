@@ -52,6 +52,7 @@ if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
 <div class="wrapper">
     <form class="form-signin" action="login.php" method="post">
         <h1 id="logo">Login</h1>
+        <input type="hidden" name="csrf_token" value="<?php echo isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : ''; ?>">
         <input type="text" class="form-control <?php echo !empty($email_error) ? 'error-border' : ''; ?>" placeholder="Email Address" name="email" size="20" maxlength="60" required/>
         <?php if (!empty($email_error)): ?>
             <div class="error"><?php echo $email_error; ?></div>
