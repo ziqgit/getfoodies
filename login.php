@@ -1,10 +1,4 @@
 <?php
-session_set_cookie_params([
-    'httponly' => true,
-    'secure' => false, // Set to true if using HTTPS
-    'samesite' => 'Lax',
-    'path' => '/',
-]);
 ini_set('session.cookie_httponly', 1);
 session_start();
 header("X-Frame-Options: DENY");
