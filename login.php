@@ -6,7 +6,7 @@ header("Content-Security-Policy: frame-ancestors 'none';");
 session_start(); // Start session
 
 // Generate CSRF Token if not already set
-if (!isset($_SESSION['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 ?>
@@ -23,9 +23,6 @@ if (!isset($_SESSION['csrf_token'])) {
 
 // Check if the form has been submitted:
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    var_dump($_POST['csrf_token']);
-    var_dump(isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : null);
-    exit;
 
     // CSRF Token Validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
