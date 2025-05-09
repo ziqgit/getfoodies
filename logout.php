@@ -2,12 +2,6 @@
 	<head><link rel="stylesheet" href="includes/loggedin.css" type="text/css" media="screen"/></head>
 </html>
 <?php
-session_set_cookie_params([
-    'httponly' => true,
-    'secure' => false, // Set to true if using HTTPS
-    'samesite' => 'Lax',
-    'path' => '/',
-]);
 ini_set('session.cookie_httponly', 1);
 // This page lets the user logout.
 // This version uses sessions.
