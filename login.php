@@ -1,10 +1,4 @@
 <?php
-// Redirect IP-based access to domain (optional but recommended)
-if ($_SERVER['HTTP_HOST'] !== 'getfoodies.website') {
-    header('Location: http://getfoodies.website' . $_SERVER['REQUEST_URI']);
-    exit();
-}
-
 // Set security headers
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
