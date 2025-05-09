@@ -23,6 +23,9 @@ if (!isset($_SESSION['csrf_token'])) {
 
 // Check if the form has been submitted:
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    var_dump($_POST['csrf_token']);
+    var_dump(isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : null);
+    exit;
 
     // CSRF Token Validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
