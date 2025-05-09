@@ -1,8 +1,17 @@
 <?php
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
-?>
-<?php
+
+// ✅ Secure session cookie config BEFORE session_start
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => 'getfoodies.website', // change if you're using www
+    'secure' => false,                // set to true when using HTTPS
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
+
 session_start(); // Start session
 
 // Generate CSRF Token if not already set
@@ -33,12 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     require ('includes/login_functions.inc.php');
     require ('mysqli_connect.php');
     
-    // **Secure Session Configuration**
-    // Start the session securely
-    session_start();
-    ini_set('session.cookie_httponly', '1'); // Prevent JavaScript access to cookies
-    ini_set('session.cookie_secure', '1');  // Ensure cookies are sent only over HTTPS
-    ini_set('session.cookie_samesite', 'Strict'); // Prevent CSRF with SameSite protection
+    // ✅ These ini_set lines are now redundant, but you can keep them if you want
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_secure', '1');
+    ini_set('session.cookie_samesite', 'Strict');
 
     // Check the login:
     list ($check, $data) = check_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
@@ -76,4 +83,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Display the login page:
 include ('includes/login_page.inc.php');
 ?>
-
