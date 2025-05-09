@@ -28,19 +28,13 @@ session_start();
 </head>
 <body>
 <?php 
-ini_set('session.cookie_httponly', 1);
-session_start();
-
 // This page prints any errors associated with logging in
 // and it creates the entire login page, including the form.
-
 // Include the header:
 $page_title = 'Login';
 include ('includes/header.html');
-
 // Retrieve any error messages from the session:
 $email_error = $password_error = '';
-
 if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
     foreach ($_SESSION['errors'] as $msg) {
         if (strpos($msg, 'email') !== false) {
@@ -52,7 +46,6 @@ if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
     unset($_SESSION['errors']); // Clear the errors after displaying
 }
 ?>
-
 <div class="wrapper">
     <form class="form-signin" action="login.php" method="post">
         <h1 id="logo">Login</h1>
@@ -68,7 +61,6 @@ if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
     </form>
 </div>
 <div class="background-slider"></div>
-
 <?php include ('includes/footer_loggedin.html'); ?>
 </body>
 </html>
