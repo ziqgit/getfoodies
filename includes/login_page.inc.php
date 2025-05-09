@@ -1,7 +1,3 @@
-<?php 
-ini_set('session.cookie_httponly', 1);
-session_start();
-?>
 <html>
 <head>
     <style>
@@ -28,7 +24,6 @@ session_start();
 </head>
 <body>
 <?php 
-ini_set('session.cookie_httponly', 1);
 session_start();
 
 // This page prints any errors associated with logging in
@@ -55,8 +50,8 @@ if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
 
 <div class="wrapper">
     <form class="form-signin" action="login.php" method="post">
+    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
         <h1 id="logo">Login</h1>
-        <input type="hidden" name="csrf_token" value="<?php echo isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : ''; ?>">
         <input type="text" class="form-control <?php echo !empty($email_error) ? 'error-border' : ''; ?>" placeholder="Email Address" name="email" size="20" maxlength="60" required/>
         <?php if (!empty($email_error)): ?>
             <div class="error"><?php echo $email_error; ?></div>
