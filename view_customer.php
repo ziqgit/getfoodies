@@ -1,7 +1,3 @@
-<?php 
-ini_set('session.cookie_httponly', 1);
-session_start();
-
 <html>
 	<head>
 		<link rel="stylesheet" href="includes/view_customer.css" type="text/css" media="screen"/>
@@ -12,6 +8,7 @@ session_start();
 		<?php 
 		// This script retrieves all the records from the users table.
 		// This new version links to edit and delete pages.
+		session_start(); // Start the session.
 
 		// If no session value is present, redirect the user:
 		if (!isset($_SESSION['user_id'])) {
@@ -28,7 +25,7 @@ session_start();
 				<?php
 				echo '<h1 id="logo">Reservation List</h1>';
 
-				require ('../mysqli_connect.php');
+				require ('mysqli_connect.php');
 				
 				// Define the query:
 				$q = "SELECT total_budget, contact_person, contact_no, num_pax, event_date, location, special_req, promo_code, subscribe, order_id FROM orders ORDER BY registration_date ASC";
