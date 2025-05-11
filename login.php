@@ -2,6 +2,16 @@
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
 
+// ✅ Set cookie parameters BEFORE session_start
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => 'getfoodies.website', // or 'www.getfoodies.website' if you're using www
+    'secure' => false,                // Change to true when using HTTPS
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
+
 session_start(); // Start session
 
 // Generate CSRF Token if not already set
@@ -17,9 +27,6 @@ if (!isset($_SESSION['csrf_token'])) {
 </html>
 
 <?php 
-// This page processes the login form submission.
-// The script now uses sessions.
-
 // Check if the form has been submitted:
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
@@ -31,9 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Include helper files:
     require ('includes/login_functions.inc.php');
     require ('mysqli_connect.php');
-    
+
+    // These lines are still safe to keep as a backup
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_secure', '1');
+    ini_set('session.cookie_samesite', 'Strict');
+
     // Check the login:
-    list ($check, $data) = check_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
+    list($check, $data) = check_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
     
     if ($check) { // Login successful
         
@@ -44,27 +56,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Regenerate session ID to prevent session fixation attacks:
         session_regenerate_id(true);
 
+        // ✅ Force set the session cookie to ensure it's sent immediately
+        setcookie(session_name(), session_id(), [
+            'expires' => 0,
+            'path' => '/',
+            'domain' => 'getfoodies.website',
+            'secure' => false, // Set to true once on HTTPS
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+
         // Redirect to the logged-in page:
         redirect_user('loggedin.php');
             
     } else { // Login failed
 
-        // Assign $data to $errors for login_page.inc.php:
         $errors = $data;
-
-        // Store errors in the session securely:
         $_SESSION['errors'] = htmlspecialchars(json_encode($errors), ENT_QUOTES, 'UTF-8');
 
-        // Redirect back to the login form:
         header("Location: login.php");
         exit();
     }
-    
-    // Close the database connection securely:
+
     mysqli_close($dbc); 
 
-} // End of the main submit conditional.
+} // End of submit check
 
-// Display the login page:
 include ('includes/login_page.inc.php');
 ?>
