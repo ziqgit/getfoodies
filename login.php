@@ -42,11 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     require ('includes/login_functions.inc.php');
     require ('mysqli_connect.php');
     
-    // ✅ These ini_set lines are now redundant, but you can keep them if you want
-    ini_set('session.cookie_httponly', '1');
-    ini_set('session.cookie_secure', '1');
-    ini_set('session.cookie_samesite', 'Strict');
-
     // Check the login:
     list ($check, $data) = check_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
     
