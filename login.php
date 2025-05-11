@@ -2,16 +2,6 @@
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
 
-// ✅ Secure session cookie config BEFORE session_start
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'domain' => 'getfoodies.website', // change if you're using www
-    'secure' => false,                // set to true when using HTTPS
-    'httponly' => true,
-    'samesite' => 'Strict'
-]);
-
 session_start(); // Start session
 
 // Generate CSRF Token if not already set
