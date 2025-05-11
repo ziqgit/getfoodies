@@ -9,6 +9,7 @@ session_set_cookie_params([
     'domain' => '.getfoodies.website', // or 'www.getfoodies.website' if you're using www
     'secure' => false,                // Change to true when using HTTPS
     'httponly' => true,
+    'samesite' => 'Strict"
 ]);
 
 session_start(); // Start session
