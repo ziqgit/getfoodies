@@ -6,7 +6,7 @@ header("Content-Security-Policy: frame-ancestors 'none';");
 session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
-    'domain' => 'getfoodies.website', // or 'www.getfoodies.website' if you're using www
+    'domain' => '.getfoodies.website', // or 'www.getfoodies.website' if you're using www
     'secure' => false,                // Change to true when using HTTPS
     'httponly' => true,
     'samesite' => 'Strict'
