@@ -2,6 +2,12 @@
 header('X-Frame-Options: DENY');
 header("Content-Security-Policy: frame-ancestors 'none';");
 header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; frame-src 'self' https://www.google.com https://www.google.com/maps; script-src 'self';");
+
+// Start session and generate CSRF token if not set
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 
 <!DOCTYPE html>
@@ -128,6 +134,10 @@ include('includes/header.html');
 
 // Check for form submission:
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('CSRF validation failed.');
+    }
 
     $errors = array(); // Initialize an error array.
 
@@ -228,6 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section class="contact-form">
     <h2>Get in Touch</h2>
     <form action="ContactUs.php" method="post" class="contact-form">
+        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
         <label for="first_name">First Name:</label>
         <input type="text" name="first_name" id="first_name" placeholder="Your First Name" value="<?php if (isset($_POST['first_name'])) echo htmlspecialchars($_POST['first_name']); ?>" required>
 
