@@ -2,6 +2,12 @@
 header('X-Frame-Options: DENY');
 header("Content-Security-Policy: frame-ancestors 'none';");
 header("Content-Security-Policy: default-src 'self'; script-src 'self' https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com; img-src 'self' data: https:; font-src 'self' https://maxcdn.bootstrapcdn.com; connect-src 'self'; frame-src 'self'; object-src 'none';");
+
+// Start session and generate CSRF token if not set
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 <html>
 <head>
@@ -17,6 +23,10 @@ include ('includes/header.html');
 
 <?php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('CSRF validation failed.');
+    }
     $errors = array();
 
     // Check required fields
@@ -128,6 +138,7 @@ $(document).ready(function() {
 <div class="wrapper">
     <h1>Enquire Now! Request FREE Quote</h1>
     <form action="req_quotation_form.php" method="post">
+        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
         <div class="column2">
             <h2>Event Details</h2>
             <p>Occasion:
