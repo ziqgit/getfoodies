@@ -138,15 +138,18 @@ $(document).ready(function() {
 <div class="wrapper">
     <h1>Enquire Now! Request FREE Quote</h1>
     <form action="req_quotation_form.php" method="post">
-        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
         <div class="column2">
             <h2>Event Details</h2>
             <p>Occasion:
                 <?php
                 $occasion = array('', 'Company Event', 'Happy Birthday Event', 'Wedding Event');
+                $selected_occasion = isset($_POST['occasion']) ? htmlspecialchars($_POST['occasion'], ENT_QUOTES, 'UTF-8') : '';
                 echo '<select name="occasion">';
                 foreach ($occasion as $key => $value) {
-                    echo "<option value=\"$value\">$value</option>\n";
+                    $safe_value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                    $selected = ($selected_occasion === $safe_value) ? 'selected' : '';
+                    echo "<option value=\"$safe_value\" $selected>$safe_value</option>\n";
                 }
                 echo '</select>';
                 ?>
@@ -168,9 +171,12 @@ $(document).ready(function() {
             <p>Location:
                 <?php
                 $location = array('', 'Kuala Lumpur', 'Selangor');
+                $selected_location = isset($_POST['location']) ? htmlspecialchars($_POST['location'], ENT_QUOTES, 'UTF-8') : '';
                 echo '<select name="location">';
                 foreach ($location as $key => $value) {
-                    echo "<option value=\"$value\">$value</option>\n";
+                    $safe_value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                    $selected = ($selected_location === $safe_value) ? 'selected' : '';
+                    echo "<option value=\"$safe_value\" $selected>$safe_value</option>\n";
                 }
                 echo '</select>';
                 ?>
