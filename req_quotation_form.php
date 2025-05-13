@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $special_req = trim($_POST['special_req'] ?? '');
     $promo_code = trim($_POST['promo_code'] ?? '');
     $subscribe = isset($_POST['subscribe']) ? 'Yes' : 'No';
+    $company_name = trim($_POST['company_name'] ?? '');
 
     // Validate numerical fields
     if (!empty($budget) && !is_numeric($budget)) {
@@ -80,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         require('mysqli_connect.php');
 
         // Insert query
-        $q = "INSERT INTO orders (occasion, event_date, event_time, budget, registration_date, total_budget, num_pax, event_address, location, contact_person, contact_no, email, special_req, promo_code, subscribe) VALUES ('$occasion', '$event_date', '$event_time', '$budget', NOW(), '$total_budget', '$num_pax', '$event_address', '$location', '$contact_person', '$contact_no', '$email', '$special_req', '$promo_code', '$subscribe')";
+        $q = "INSERT INTO orders (company_name, occasion, event_date, event_time, budget, registration_date, total_budget, num_pax, event_address, location, contact_person, contact_no, email, special_req, promo_code, subscribe) VALUES ('$company_name', '$occasion', '$event_date', '$event_time', '$budget', NOW(), '$total_budget', '$num_pax', '$event_address', '$location', '$contact_person', '$contact_no', '$email', '$special_req', '$promo_code', '$subscribe')";
         $r = mysqli_query($dbc, $q);
 
         // Debug: Output SQL query and MySQL error
@@ -216,6 +217,7 @@ $(document).ready(function() {
                 <label for="cbtest-19" class="check-box"></p>
             </div>
         </div>
+        <p>Company Name: <input type="text" name="company_name" size="30" maxlength="30" value="<?php if (isset($_POST['company_name'])) echo htmlspecialchars($_POST['company_name'], ENT_QUOTES, 'UTF-8'); ?>" /></p>
         <p class="textsubmit"><input type="submit" name="submit" value="Submit for FREE Quote" /></p>
     </form>
 </div>
