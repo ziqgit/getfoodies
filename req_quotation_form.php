@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $total_budget = number_format($total_budget, 2);
 
         // Database connection
-        require('../mysqli_connect.php');
+        require('mysqli_connect.php');
 
         // Insert query
         $q = "INSERT INTO orders (occasion, event_date, event_time, budget, registration_date, total_budget, num_pax, event_address, location, contact_person, contact_no, email, special_req, promo_code, subscribe) VALUES ('$occasion', '$event_date', '$event_time', '$budget', NOW(), '$total_budget', '$num_pax', '$event_address', '$location', '$contact_person', '$contact_no', '$email', '$special_req', '$promo_code', '$subscribe')";
