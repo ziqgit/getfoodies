@@ -55,7 +55,8 @@ function sendMail($email, $subject, $message){
        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
        // TCP port to connect with the Gmail SMTP server.
-       $mail->Port = 587;
+       $mail->Port = 2525;
+       $mail->Timeout = 10;
 
        // Who is sending the email. Using constants from the config file.
        $mail->setFrom(SEND_FROM, SEND_FROM_NAME);
