@@ -1,17 +1,3 @@
-<?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-header('X-Frame-Options: DENY');
-header("Content-Security-Policy: frame-ancestors 'none';");
-header("Content-Security-Policy: default-src 'self'; script-src 'self' https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com; img-src 'self' data: https:; font-src 'self' https://maxcdn.bootstrapcdn.com; connect-src 'self'; frame-src 'self'; object-src 'none';");
-
-// Start session and generate CSRF token if not set
-session_start();
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-?>
 <html>
 <head>
     <link rel="stylesheet" href="includes/req_quotation_form.css" type="text/css" media="screen"/>
@@ -26,14 +12,7 @@ include ('includes/header.html');
 
 <?php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // CSRF token validation
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('CSRF validation failed.');
-    }
     $errors = array();
-
-    // Debug: Output all POST data
-    echo '<pre>POST DATA: ' . print_r($_POST, true) . '</pre>';
 
     // Check required fields
     $required_fields = ['occasion', 'event_date', 'event_time', 'budget', 'num_pax', 'event_address', 'location', 'contact_person', 'contact_no', 'email'];
@@ -66,28 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors[] = "Please enter a valid email address.";
     }
 
-    // Debug: Output validation errors
-    if (!empty($errors)) {
-        echo '<pre>VALIDATION ERRORS: ' . print_r($errors, true) . '</pre>';
-    }
-
     // Calculate total budget
     if (empty($errors)) {
         $total_budget = $budget * $num_pax;
         $total_budget = number_format($total_budget, 2);
 
         // Database connection
-        require('mysqli_connect.php');
+        require('../mysqli_connect.php');
 
         // Insert query
         $q = "INSERT INTO orders (occasion, event_date, event_time, budget, registration_date, total_budget, num_pax, event_address, location, contact_person, contact_no, email, special_req, promo_code, subscribe) VALUES ('$occasion', '$event_date', '$event_time', '$budget', NOW(), '$total_budget', '$num_pax', '$event_address', '$location', '$contact_person', '$contact_no', '$email', '$special_req', '$promo_code', '$subscribe')";
         $r = mysqli_query($dbc, $q);
-
-        // Debug: Output SQL query and MySQL error
-        echo '<pre>SQL QUERY: ' . $q . '</pre>';
-        if (!$r) {
-            echo '<pre>MYSQL ERROR: ' . mysqli_error($dbc) . '</pre>';
-        }
 
         if ($r) {
             // Send email
@@ -108,13 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         Subscribe: $subscribe";
             $response = sendMail($email, "Quotation Details", nl2br($message));
 
-            // Debug: Output mail response
-            echo '<pre>MAIL RESPONSE: ' . print_r($response, true) . '</pre>';
-
             echo '<div class="wrapper1">';
             echo '<h1>Thank you!</h1>';
             echo '<h2>You are now registered!</h2>';
-            echo nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
+
+
+           echo nl2br($message);
             echo '<p>-----------------------------------------------------------------------</p>';
             echo '<p>Thank you for registering with us. We will contact you soon.</p>';
             if ($response == "success") {
@@ -135,7 +102,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         // Generate a JavaScript alert with error messages
         echo '<script type="text/javascript">';
-        echo 'alert(' . json_encode("The following error(s) occurred:\n" . implode("\n - ", $errors) . "\nPlease try again.") . ');';
+        echo 'alert("The following error(s) occurred:\n';
+        foreach ($errors as $msg) {
+            echo " - $msg\\n";
+        }
+        echo 'Please try again.");';
         echo '</script>';
     }
 }
@@ -158,58 +129,51 @@ $(document).ready(function() {
 <div class="wrapper">
     <h1>Enquire Now! Request FREE Quote</h1>
     <form action="req_quotation_form.php" method="post">
-        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
         <div class="column2">
             <h2>Event Details</h2>
             <p>Occasion:
                 <?php
                 $occasion = array('', 'Company Event', 'Happy Birthday Event', 'Wedding Event');
-                $selected_occasion = isset($_POST['occasion']) ? htmlspecialchars($_POST['occasion'], ENT_QUOTES, 'UTF-8') : '';
                 echo '<select name="occasion">';
                 foreach ($occasion as $key => $value) {
-                    $safe_value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-                    $selected = ($selected_occasion === $safe_value) ? 'selected' : '';
-                    echo "<option value=\"$safe_value\" $selected>$safe_value</option>\n";
+                    echo "<option value=\"$value\">$value</option>\n";
                 }
                 echo '</select>';
                 ?>
             </p>
-            <p>Event Date: <input type="date" name="event_date" size="15" maxlength="40" value="<?php if (isset($_POST['event_date'])) echo htmlspecialchars($_POST['event_date'], ENT_QUOTES, 'UTF-8'); ?>" />
-                Event Time: <input type="time" name="event_time" size="20" maxlength="60" value="<?php if (isset($_POST['event_time'])) echo htmlspecialchars($_POST['event_time'], ENT_QUOTES, 'UTF-8'); ?>" />
+            <p>Event Date: <input type="date" name="event_date" size="15" maxlength="40" value="<?php if (isset($_POST['event_date'])) echo $_POST['event_date']; ?>" />
+                Event Time: <input type="time" name="event_time" size="20" maxlength="60" value="<?php if (isset($_POST['event_time'])) echo $_POST['event_time']; ?>" />
             </p>
         </div>
         <div class="column2">
-            <p>Budget/Pax (RM): <input type="text" id="price" name="budget" size="20" maxlength="60" value="<?php if (isset($_POST['budget'])) echo htmlspecialchars($_POST['budget'], ENT_QUOTES, 'UTF-8'); ?>" />
-                Number of Pax: <input type="text" id="qty" name="num_pax" size="20" maxlength="60" value="<?php if (isset($_POST['num_pax'])) echo htmlspecialchars($_POST['num_pax'], ENT_QUOTES, 'UTF-8'); ?>" />
+            <p>Budget/Pax (RM): <input type="text" id="price" name="budget" size="20" maxlength="60" value="<?php if (isset($_POST['budget'])) echo $_POST['budget']; ?>" />
+                Number of Pax: <input type="text" id="qty" name="num_pax" size="20" maxlength="60" value="<?php if (isset($_POST['num_pax'])) echo $_POST['num_pax']; ?>" />
             </p>
             <p class="tb">Total Budget (RM): <input type="text" placeholder="Total Budget" id="total_budget" disabled />
-                <input type="hidden" name="total_budget" id="hidden_total_budget" value="<?php if (isset($_POST['total_budget'])) echo htmlspecialchars($_POST['total_budget'], ENT_QUOTES, 'UTF-8'); ?>" />
+                <input type="hidden" name="total_budget" id="hidden_total_budget" value="<?php if (isset($_POST['total_budget'])) echo $_POST['total_budget']; ?>" />
             </p>
         </div>
         <div class="column2">
-            <p>Event Address: <br><textarea name="event_address" placeholder="Your Event Address"><?php if (isset($_POST['event_address'])) echo htmlspecialchars($_POST['event_address'], ENT_QUOTES, 'UTF-8'); ?></textarea></p>
+            <p>Event Address: <br><textarea name="event_address" placeholder="Your Event Address"></textarea></p>
             <p>Location:
                 <?php
                 $location = array('', 'Kuala Lumpur', 'Selangor');
-                $selected_location = isset($_POST['location']) ? htmlspecialchars($_POST['location'], ENT_QUOTES, 'UTF-8') : '';
                 echo '<select name="location">';
                 foreach ($location as $key => $value) {
-                    $safe_value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-                    $selected = ($selected_location === $safe_value) ? 'selected' : '';
-                    echo "<option value=\"$safe_value\" $selected>$safe_value</option>\n";
+                    echo "<option value=\"$value\">$value</option>\n";
                 }
                 echo '</select>';
                 ?>
             </p>
-            <p>Contact Person: <input type="text" name="contact_person" size="20" placeholder="Your Name" maxlength="60" value="<?php if (isset($_POST['contact_person'])) echo htmlspecialchars($_POST['contact_person'], ENT_QUOTES, 'UTF-8'); ?>" />
-                Contact Number: <input type="text" name="contact_no" size="20" placeholder="Your Phone Number" maxlength="60" value="<?php if (isset($_POST['contact_no'])) echo htmlspecialchars($_POST['contact_no'], ENT_QUOTES, 'UTF-8'); ?>" />
+            <p>Contact Person: <input type="text" name="contact_person" size="20" placeholder="Your Name" maxlength="60" value="<?php if (isset($_POST['contact_person'])) echo $_POST['contact_person']; ?>" />
+                Contact Number: <input type="text" name="contact_no" size="20" placeholder="Your Phone Number" maxlength="60" value="<?php if (isset($_POST['contact_no'])) echo $_POST['contact_no']; ?>" />
             </p>
-            <center><p>Email: <input type="text" name="email" size="30" maxlength="60" placeholder="Your Email" value="<?php if (isset($_POST['email'])) echo htmlspecialchars($_POST['email'], ENT_QUOTES, 'UTF-8'); ?>" />
+            <center><p>Email: <input type="text" name="email" size="30" maxlength="60" placeholder="Your Email" value="<?php if (isset($_POST['email'])) echo $_POST['email']; ?>" />
             </p>
         </div>
         <div class="column3">
-            <p>Special Request: <br><textarea name="special_req" placeholder="exp: Kambing golek nak garing."><?php if (isset($_POST['special_req'])) echo htmlspecialchars($_POST['special_req'], ENT_QUOTES, 'UTF-8'); ?></textarea></p>
-            <p>Promo Code: <input type="text" name="promo_code" size="20" maxlength="60" value="<?php if (isset($_POST['promo_code'])) echo htmlspecialchars($_POST['promo_code'], ENT_QUOTES, 'UTF-8'); ?>" />
+            <p>Special Request: <br><textarea name="special_req" placeholder="exp: Kambing golek nak garing."></textarea></p>
+            <p>Promo Code: <input type="text" name="promo_code" size="20" maxlength="60" value="<?php if (isset($_POST['promo_code'])) echo $_POST['promo_code']; ?>" />
             </p>
             <div class="checkbox-wrapper-19">
                 <p>Subscribe to our newsletter <input type="checkbox" id="cbtest-19" name="subscribe" size="20" maxlength="60" value="Yes" /> 
