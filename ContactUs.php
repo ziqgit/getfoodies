@@ -1,300 +1,202 @@
 <?php
-header('X-Frame-Options: DENY');
-header("Content-Security-Policy: frame-ancestors 'none';");
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; frame-src 'self' https://www.google.com https://www.google.com/maps; script-src 'self';");
-
-// Start session and generate CSRF token if not set
-session_start();
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+    header("X-Frame-Option: DENY");
+    header("Content-Security-Policy: frame-ancestors: 'none';");
+    session_start();
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us</title>
-    
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: cornsilk;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-
-        .header1 {
-            color: MidnightBlue;
-            text-align: center;
-            padding: 20px;
-        }
-
-        section {
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .contact-form label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .contact-form input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .contact-form textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .contact-form button {
-            background-color: #007bff;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .contact-info h2 {
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 8px;
-            margin-bottom: 16px;
-        }
-
-        .info-box div {
-            margin-bottom: 12px;
-        }
-
-        .map-section .map-container {
-            overflow: hidden;
-            border-radius: 8px;
-        }
-
-        .map-container img {
-            width: 100%;
-            border-radius: 8px;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .map-container img:hover {
-            transform: scale(1.05);
-        }
-
-        .wrapper0{
-            min-height: 740px;
-        }
-
-        .wrapper {
-    border-style: dashed;
-    max-width: 20%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    position: relative;    
-    top: 250px;
-    text-align: center;
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0, 0.4); /* Black w/opacity/see-through */
-    color: white;
-    font-weight: bold;
-    border: 3px solid #f1f1f1;
-    z-index: 2;
-}
-       
-    </style>
+    <link rel="stylesheet" href="includes/req_quotation_form.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
+<?php 
+require("script.php");
+$page_title = 'Free Quotation';
+include ('includes/header.html');
+?>
+
 <?php
-// ContactUs.php
-
-$page_title = 'Contact Us';
-include('includes/header.html');
-
-// Check for form submission:
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // CSRF token validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die('CSRF validation failed.');
     }
+    $errors = array();
 
-    $errors = array(); // Initialize an error array.
-
-    // Check for a first name:
-    if (empty($_POST['first_name'])) {
-        $errors[] = 'You forgot to enter your first name.';
-    } else {
-        $fn = trim($_POST['first_name']);
-    }
-
-    // Check for a last name:
-    if (empty($_POST['last_name'])) {
-        $errors[] = 'You forgot to enter your last name.';
-    } else {
-        $ln = trim($_POST['last_name']);
-    }
-
-    // Check for an email:
-    if (empty($_POST['email'])) {
-        $errors[] = 'You forgot to enter your email.';
-    } else {
-        $e = trim($_POST['email']);
-    }
-
-    // Check for a phone no:
-    if (empty($_POST['phone_no'])) {
-        $errors[] = 'You forgot to enter your phone no.';
-    } else {
-        $pn = trim($_POST['phone_no']);
-    }
-
-    // Check for a message:
-    if (empty($_POST['Message'])) {
-        $errors[] = 'You forgot to enter your message.';
-    } else {
-        $m = trim($_POST['Message']);
-    }
-
-    if (empty($errors)) { // If everything's OK.
-
-        // Register the user in the database...
-        require ('../mysqli_connect.php'); // Connect to the db.
-
-        // Make the query:
-        $q = "INSERT INTO message (first_name, last_name, email, phone_no, Message,Send_date) 
-              VALUES ('$fn', '$ln', '$e', '$pn', '$m', NOW())";
-        $r = mysqli_query($dbc, $q); // Run the query.
-        
-        ?>
-        <div class="wrapper0">
-        <div class="wrapper">
-        <?php
-        if ($r) { // If it ran OK.
-
-            // Print a message:
-            echo '<h1>Thank you!</h1>
-                  <p>Your message has been sent!</p><p><br /></p>
-                  <a href="ContactUs.php"><p ><input class="btn btn-lg btn-primary btn-block" type="submit" name="submit" value="back to Contact Us" /></p></a>';
-
-        } else { // If it did not run OK.
-
-            // Public message:
-            echo '<h1>System Error</h1>
-                  <p class="error">You could not be registered due to a system error. We apologize for any inconvenience.</p>';
-
-            // Debugging message:
-            echo '<p>' . mysqli_error($dbc) . '<br /><br />Query: ' . $q . '</p>';
-
-        } // End of if ($r) IF.
-
-        mysqli_close($dbc); // Close the database connection.
-        ?>
-        </div>
-        </div>
-        <?php
-
-        // Include the footer and quit the script:
-        include ('includes/footer.html');
-        exit();
-
-    } else { // Report the errors.
-
-        echo '<h1>Error!</h1>
-              <p class="error">The following error(s) occurred:<br />';
-        foreach ($errors as $msg) { // Print each error.
-            echo " - $msg<br />\n";
+    // Check required fields
+    $required_fields = ['occasion', 'event_date', 'event_time', 'budget', 'num_pax', 'event_address', 'location', 'contact_person', 'contact_no', 'email'];
+    foreach ($required_fields as $field) {
+        if (empty($_POST[$field])) {
+            $errors[] = "You forgot to fill in $field.";
+        } else {
+            $$field = trim($_POST[$field]);
         }
-        echo '</p><p>Please try again.</p><p><br /></p>';
+    }
 
-    } // End of if (empty($errors)) IF.
+    // Optional fields
+    $special_req = trim($_POST['special_req'] ?? '');
+    $promo_code = trim($_POST['promo_code'] ?? '');
+    $subscribe = isset($_POST['subscribe']) ? 'Yes' : 'No';
 
-} // End of the main Submit conditional.
-?>	
-<header class="header1">
-    <h1>Contact Us</h1>
-</header>
+    // Validate numerical fields
+    if (!empty($budget) && !is_numeric($budget)) {
+        $errors[] = "Budget must be a number.";
+    }
+    if (!empty($num_pax) && !is_numeric($num_pax)) {
+        $errors[] = "Number of Pax must be a number.";
+    }
+    if (!empty($contact_no) && !is_numeric($contact_no)) {
+        $errors[] = "Contact Number must be a number.";
+    }
 
-<section class="contact-form">
-    <h2>Get in Touch</h2>
-    <form action="ContactUs.php" method="post" class="contact-form">
-        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-        <label for="first_name">First Name:</label>
-        <input type="text" name="first_name" id="first_name" placeholder="Your First Name" value="<?php if (isset($_POST['first_name'])) echo htmlspecialchars($_POST['first_name']); ?>" required>
+    // Validate email
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Please enter a valid email address.";
+    }
 
-        <label for="last_name">Last Name:</label>
-        <input type="text" name="last_name" id="last_name" placeholder="Your Last Name" value="<?php if (isset($_POST['last_name'])) echo htmlspecialchars($_POST['last_name']); ?>" required>
+    // Calculate total budget
+    if (empty($errors)) {
+        $total_budget = $budget * $num_pax;
+        $total_budget = number_format($total_budget, 2);
 
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email" placeholder="Your Email" value="<?php if (isset($_POST['email'])) echo htmlspecialchars($_POST['email']); ?>" required>
+        // Database connection
+        require('mysqli_connect.php');
 
-        <label for="phone_no">Phone No:</label>
-        <input type="tel" name="phone_no" id="phone_no" placeholder="Your Phone No" value="<?php if (isset($_POST['phone_no'])) echo htmlspecialchars($_POST['phone_no']); ?>" required>
+        // Insert query
+        $q = "INSERT INTO orders (occasion, event_date, event_time, budget, registration_date, total_budget, num_pax, event_address, location, contact_person, contact_no, email, special_req, promo_code, subscribe) VALUES ('$occasion', '$event_date', '$event_time', '$budget', NOW(), '$total_budget', '$num_pax', '$event_address', '$location', '$contact_person', '$contact_no', '$email', '$special_req', '$promo_code', '$subscribe')";
+        $r = mysqli_query($dbc, $q);
 
-        <label for="Message">Message:</label>
-        <textarea name="Message" id="Message" placeholder="Your Message" rows="4" required><?php if (isset($_POST['Message'])) echo htmlspecialchars($_POST['Message']); ?></textarea>
+        if ($r) {
+            // Send email
+            $message = "Here are your event details:\n
+                        Occasion: $occasion\n
+                        Event Date: $event_date\n
+                        Event Time: $event_time\n
+                        Event Address: $event_address\n
+                        Location: $location\n
+                        Budget/Pax: RM$budget\n
+                        Number of Pax: $num_pax\n
+                        Total Budget: RM$total_budget\n
+                        Contact Person: $contact_person\n
+                        Contact Number: $contact_no\n
+                        Email: $email\n
+                        Special Request: $special_req\n
+                        Promo Code: $promo_code\n
+                        Subscribe: $subscribe";
+            $response = sendMail($email, "Quotation Details", nl2br($message));
 
-        <button type="submit" name="submit">Send Message</button>
-    </form>
-</section>
+            echo '<div class="wrapper1">';
+            echo '<h1>Thank you!</h1>';
+            echo '<h2>You are now registered!</h2>';
 
-<section class="contact-info">
-    <h2>Contact Information</h2>
-    <div class="info-box">
-        <div>
-            <ion-icon name="location"></ion-icon>
-            <p>Universiti Kuala Lumpur - Malaysian Institute of Information Technology (UniKL MIIT)</p>
-        </div>
-        <div>
-            <h4>Imran :</h4>
-            <p class="mail">Email: imran@gmail.com
-            <p class="phone">Phone: 01110032552</p>
-        </div>
-        <div>
-		<h4>Amir :</h4>
-            <p class="mail">Email: amirencem@gmail.com</p>
-            <p class="phone">Phone: 0143514098</p>       
-        </div>
-        <div>
-        <h4>Izz Danial :</h4>
-            <p class="mail">Email: izzdanial23@gmail.com </p>
-            <p class="phone">Phone: 0132363192</p>   
-        </div>
-</section>
 
-<section class="map-section">
-    <h2>Location</h2>			
-    <!-- MAP -->
-                <div class="contact map">
-                    <p><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3983.7544240091006!2d101.69886637598353!3d3.159308053088031!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc4828d251e21f%3A0xf2c96e953e48a8a4!2sUniversiti%20Kuala%20Lumpur%20-%20Malaysian%20Institute%20of%20Information%20Technology%20(UniKL%20MIIT)!5e0!3m2!1sen!2smy!4v1705676640479!5m2!1sen!2smy" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></p>
-                </div>
-            </div>
-        </div>
-</section>
+           echo nl2br($message);
+            echo '<p>-----------------------------------------------------------------------</p>';
+            echo '<p>Thank you for registering with us. We will contact you soon.</p>';
+            if ($response == "success") {
+                echo '<p class="success">Email has been sent successfully.</p>';
+            } else {
+                echo "<p class=\"error\">$response</p>";
+            }
+            echo '</div>';
 
-<?php
-include('includes/footer.html');
+        } else {
+            echo '<h1>System Error</h1>';
+            echo '<p class="error">You could not be registered due to a system error. We apologize for any inconvenience.</p>';
+            echo '<p>' . mysqli_error($dbc) . '<br /><br />Query: ' . $q . '</p>';
+        }
+        mysqli_close($dbc);
+        include('includes/footer.html');
+        exit();
+    } else {
+        // Generate a JavaScript alert with error messages
+        echo '<script type="text/javascript">';
+        echo 'alert("The following error(s) occurred:\n';
+        foreach ($errors as $msg) {
+            echo " - $msg\\n";
+        }
+        echo 'Please try again.");';
+        echo '</script>';
+    }
+}
 ?>
 
+<script src="jquery-3.7.1.min.js"></script>
+<script>
+$(document).ready(function() {
+    $("#price, #qty").keyup(function() {
+        var total = 0;
+        var x = Number($("#price").val());
+        var y = Number($("#qty").val());
+        var total = "RM" + x * y;
+        $('#total_budget').val(total);
+        $('#hidden_total_budget').val(x * y);
+    });
+});
+</script>
+
+<div class="wrapper">
+    <h1>Enquire Now! Request FREE Quote</h1>
+    <form action="req_quotation_form.php" method="post">
+        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+        <div class="column2">
+            <h2>Event Details</h2>
+            <p>Occasion:
+                <?php
+                $occasion = array('', 'Company Event', 'Happy Birthday Event', 'Wedding Event');
+                echo '<select name="occasion">';
+                foreach ($occasion as $key => $value) {
+                    echo "<option value=\"$value\">$value</option>\n";
+                }
+                echo '</select>';
+                ?>
+            </p>
+            <p>Event Date: <input type="date" name="event_date" size="15" maxlength="40" value="<?php if (isset($_POST['event_date'])) echo $_POST['event_date']; ?>" />
+                Event Time: <input type="time" name="event_time" size="20" maxlength="60" value="<?php if (isset($_POST['event_time'])) echo $_POST['event_time']; ?>" />
+            </p>
+        </div>
+        <div class="column2">
+            <p>Budget/Pax (RM): <input type="text" id="price" name="budget" size="20" maxlength="60" value="<?php if (isset($_POST['budget'])) echo $_POST['budget']; ?>" />
+                Number of Pax: <input type="text" id="qty" name="num_pax" size="20" maxlength="60" value="<?php if (isset($_POST['num_pax'])) echo $_POST['num_pax']; ?>" />
+            </p>
+            <p class="tb">Total Budget (RM): <input type="text" placeholder="Total Budget" id="total_budget" disabled />
+                <input type="hidden" name="total_budget" id="hidden_total_budget" value="<?php if (isset($_POST['total_budget'])) echo $_POST['total_budget']; ?>" />
+            </p>
+        </div>
+        <div class="column2">
+            <p>Event Address: <br><textarea name="event_address" placeholder="Your Event Address"></textarea></p>
+            <p>Location:
+                <?php
+                $location = array('', 'Kuala Lumpur', 'Selangor');
+                echo '<select name="location">';
+                foreach ($location as $key => $value) {
+                    echo "<option value=\"$value\">$value</option>\n";
+                }
+                echo '</select>';
+                ?>
+            </p>
+            <p>Contact Person: <input type="text" name="contact_person" size="20" placeholder="Your Name" maxlength="60" value="<?php if (isset($_POST['contact_person'])) echo $_POST['contact_person']; ?>" />
+                Contact Number: <input type="text" name="contact_no" size="20" placeholder="Your Phone Number" maxlength="60" value="<?php if (isset($_POST['contact_no'])) echo $_POST['contact_no']; ?>" />
+            </p>
+            <center><p>Email: <input type="text" name="email" size="30" maxlength="60" placeholder="Your Email" value="<?php if (isset($_POST['email'])) echo $_POST['email']; ?>" />
+            </p>
+        </div>
+        <div class="column3">
+            <p>Special Request: <br><textarea name="special_req" placeholder="exp: Kambing golek nak garing."></textarea></p>
+            <p>Promo Code: <input type="text" name="promo_code" size="20" maxlength="60" value="<?php if (isset($_POST['promo_code'])) echo $_POST['promo_code']; ?>" />
+            </p>
+            <div class="checkbox-wrapper-19">
+                <p>Subscribe to our newsletter <input type="checkbox" id="cbtest-19" name="subscribe" size="20" maxlength="60" value="Yes" /> 
+                <label for="cbtest-19" class="check-box"></p>
+            </div>
+        </div>
+        <p class="textsubmit"><input type="submit" name="submit" value="Submit for FREE Quote" /></p>
+    </form>
+</div>
+
+<?php include('includes/footer.html'); ?>
 </body>
 </html>
