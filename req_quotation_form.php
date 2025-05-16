@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         Special Request: $special_req\n
                         Promo Code: $promo_code\n
                         Subscribe: $subscribe";
-            $response = sendMail($email, "Quotation Details", nl2br($message));
+            $response = sendMailSendGrid($email, "Quotation Details", nl2br($message));
 
             // Debug: Output mail response
             echo '<pre>MAIL RESPONSE: ' . print_r($response, true) . '</pre>';
