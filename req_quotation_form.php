@@ -29,9 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     $errors = array();
 
-    // Debug: Output all POST data
-    echo '<pre>POST DATA: ' . print_r($_POST, true) . '</pre>';
-
     // Check required fields
     $required_fields = ['occasion', 'event_date', 'event_time', 'budget', 'num_pax', 'event_address', 'location', 'contact_person', 'contact_no', 'email'];
     foreach ($required_fields as $field) {
@@ -64,11 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors[] = "Please enter a valid email address.";
     }
 
-    // Debug: Output validation errors
-    if (!empty($errors)) {
-        echo '<pre>VALIDATION ERRORS: ' . print_r($errors, true) . '</pre>';
-    }
-
     // Calculate total budget
     if (empty($errors)) {
         $total_budget = $budget * $num_pax;
@@ -80,12 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Insert query
         $q = "INSERT INTO orders (company_name, occasion, event_date, event_time, budget, registration_date, total_budget, num_pax, event_address, location, contact_person, contact_no, email, special_req, promo_code, subscribe) VALUES ('$company_name', '$occasion', '$event_date', '$event_time', '$budget', NOW(), '$total_budget', '$num_pax', '$event_address', '$location', '$contact_person', '$contact_no', '$email', '$special_req', '$promo_code', '$subscribe')";
         $r = mysqli_query($dbc, $q);
-
-        // Debug: Output SQL query and MySQL error
-        echo '<pre>SQL QUERY: ' . $q . '</pre>';
-        if (!$r) {
-            echo '<pre>MYSQL ERROR: ' . mysqli_error($dbc) . '</pre>';
-        }
 
         if ($r) {
             // Send email
@@ -105,9 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         Promo Code: $promo_code\n
                         Subscribe: $subscribe";
             $response = sendMailSendGrid($email, "Quotation Details", nl2br($message));
-
-            // Debug: Output mail response
-            echo '<pre>MAIL RESPONSE: ' . print_r($response, true) . '</pre>';
 
             echo '<div class="wrapper1">';
             echo '<h1>Thank you!</h1>';
