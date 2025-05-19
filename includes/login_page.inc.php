@@ -24,6 +24,7 @@
 </head>
 <body>
 <?php 
+session_start();
 
 // This page prints any errors associated with logging in
 // and it creates the entire login page, including the form.
@@ -39,8 +40,8 @@ if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
     foreach ($_SESSION['errors'] as $msg) {
         if (strpos($msg, 'email') !== false) {
             $email_error = $msg;
-        } elseif (strpos(strval($msg), 'password') !== false) {
-            $password_error = strval($msg);
+        } elseif (strpos($msg, 'password') !== false) {
+            $password_error = $msg;
         }
     }
     unset($_SESSION['errors']); // Clear the errors after displaying
