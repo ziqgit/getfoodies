@@ -1,16 +1,8 @@
 <?php
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
-
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'domain' => 'getfoodies.website', // change if you're using www
-    'secure' => false,                // set to true when using HTTPS
-    'httponly' => true,
-    'samesite' => 'Strict'
-]);
-
+?>
+<?php
 session_start(); // Start session
 
 // Generate CSRF Token if not already set
@@ -34,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Include helper files:
     require ('includes/staff_login_functions.inc.php');
     require ('mysqli_connect.php');
+    require ('includes/email_verification_functions.inc.php');
     
     // Secure Session Configuration
     session_start();
@@ -45,13 +38,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     list ($check, $data) = check_staff_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
     
     if ($check) { // Login successful
-        // Set session variables securely:
-        $_SESSION['staff_id'] = htmlspecialchars($data['id'], ENT_QUOTES, 'UTF-8');
-        $_SESSION['staff_name'] = htmlspecialchars($data['name'], ENT_QUOTES, 'UTF-8');
-        $_SESSION['staff_loggedin'] = true;
-        session_regenerate_id(true);
-        // Redirect to the staff dashboard:
-        header('Location: staff_dashboard.php');
+        // Generate and store verification code
+        $code = generate_verification_code();
+        if (store_verification_code($dbc, $data['id'], $code, false)) {
+            // Get user's email
+            $q = "SELECT email FROM staff WHERE id = ?";
+            $stmt = mysqli_prepare($dbc, $q);
+            mysqli_stmt_bind_param($stmt, 'i', $data['id']);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            if ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                if (send_verification_email($row['email'], $code)) {
+                    // Store temporary session data
+                    $_SESSION['temp_user_id'] = $data['id'];
+                    $_SESSION['temp_name'] = $data['name'];
+                    $_SESSION['is_admin'] = false;
+                    
+                    // Redirect to verification page
+                    header('Location: verify_email_code.php');
+                    exit();
+                }
+            }
+        }
+        
+        // If email verification fails, show error
+        $errors[] = 'Failed to send verification email. Please try again.';
+        $_SESSION['staff_errors'] = $errors;
+        header("Location: staff_login.php");
         exit();
     } else { // Login failed
         // Assign $data to $errors for staff_login_page.inc.php:
