@@ -2,12 +2,15 @@
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
 
+// Set a custom session name before starting the session
+session_name('GF_SESSID'); // Custom session name instead of default PHPSESSID
+
 // ✅ Set cookie parameters BEFORE session_start
 session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
-    'domain' => '.getfoodies.website', // or 'www.getfoodies.website' if you're using www
-    'secure' => false,                // Change to true when using HTTPS
+    'domain' => 'getfoodies.website',
+    'secure' => true,                // Set to true for HTTPS
     'httponly' => true,
     'samesite' => 'Strict'
 ]);
@@ -38,41 +41,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Include helper files:
     require ('includes/login_functions.inc.php');
     require ('mysqli_connect.php');
-
-    // These lines are still safe to keep as a backup
-    ini_set('session.cookie_httponly', '1');
-    ini_set('session.cookie_secure', '1');
-    ini_set('session.cookie_samesite', 'Strict');
+    require ('includes/email_verification_functions.inc.php');
 
     // Check the login:
     list($check, $data) = check_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
     
     if ($check) { // Login successful
-        
-        // Set session variables securely:
-        $_SESSION['user_id'] = htmlspecialchars($data['user_id'], ENT_QUOTES, 'UTF-8');
-        $_SESSION['name'] = htmlspecialchars($data['name'], ENT_QUOTES, 'UTF-8');
-        
-        // Regenerate session ID to prevent session fixation attacks:
-        session_regenerate_id(true);
 
-        // ✅ Force set the session cookie to ensure it's sent immediately
-        setcookie(session_name(), session_id(), [
-            'expires' => 0,
-            'path' => '/',
-            'domain' => 'getfoodies.website',
-            'secure' => false, // Set to true once on HTTPS
-            'httponly' => true,
-            'samesite' => 'Strict'
-        ]);
+        // Generate and store verification code
+        $code = generate_verification_code();
+        error_log("Generated verification code for admin: " . $code);
+        
+        if (store_verification_code($dbc, $data['user_id'], $code, true)) {
+            error_log("Stored verification code for admin in database");
+            
+            // Get user's email
+            $q = "SELECT email FROM admin WHERE user_id = ?";
+            $stmt = mysqli_prepare($dbc, $q);
+            mysqli_stmt_bind_param($stmt, 'i', $data['user_id']);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            if ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                 error_log("Found admin email: " . $row['email']);
+                
+                if (empty($row['email'])) {
+                    $errors[] = 'No email address found for your admin account. Please contact administrator.';
+                    $_SESSION['errors'] = $errors;
+                    header("Location: login.php");
+                    exit();
+                }
 
-        // Redirect to the logged-in page:
-        redirect_user('loggedin.php');
+                if (send_verification_email($row['email'], $code)) {
+                    error_log("Verification email sent successfully for admin");
+
+                    // Store temporary session data
+                    $_SESSION['temp_user_id'] = $data['user_id'];
+                    $_SESSION['temp_name'] = $data['name'];
+                    $_SESSION['is_admin'] = true;
+
+                    error_log("Admin session data stored. Redirecting to verification page...");
+
+                    // Redirect to the verification page:
+                    header('Location: verify_email_code.php');
+                    exit();
+                } else {
+                    error_log("Failed to send verification email for admin");
+                    $errors[] = 'Failed to send verification email. Please check your email address and try again.';
+                    $_SESSION['errors'] = $errors;
+                    header("Location: login.php");
+                    exit();
+                }
+            } else {
+                 error_log("No email found for admin user ID: " . $data['user_id']);
+                $errors[] = 'No email address found for your admin account. Please contact administrator.';
+                $_SESSION['errors'] = $errors;
+                header("Location: login.php");
+                exit();
+            }
+        } else {
+            error_log("Failed to store verification code for admin in database");
+            $errors[] = 'System error. Please try again later.';
+            $_SESSION['errors'] = $errors;
+            header("Location: login.php");
+            exit();
+        }
+
             
     } else { // Login failed
 
         $errors = $data;
-        $_SESSION['errors'] = htmlspecialchars(json_encode($errors), ENT_QUOTES, 'UTF-8');
+        $_SESSION['errors'] = $errors;
 
         header("Location: login.php");
         exit();
