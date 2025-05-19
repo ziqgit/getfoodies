@@ -1,26 +1,6 @@
 <html>
 <head>
-    <style>
-        .erorrh1 {
-            color: red;
-            text-align: center;
-            font-size: 50px;
-        }
-        .errorp {
-            color: red;
-            text-align: center;
-            font-size: 15px;
-        }
-        .error {
-            color: red;
-            font-size: 12px;
-            margin-top: -10px;
-            margin-bottom: 10px;
-        }
-        .form-control.error-border {
-            border-color: red;
-        }
-    </style>
+    <link rel="stylesheet" href="includes/staff_login.css" type="text/css" media="screen"/>
 </head>
 <body>
 <?php 
