@@ -2,9 +2,6 @@
 header("X-Frame-Options: DENY");
 header("Content-Security-Policy: frame-ancestors 'none';");
 
-// Set a custom session name before starting the session
-session_name('GF_SESSID'); // Custom session name instead of default PHPSESSID
-
 // ✅ Set cookie parameters BEFORE session_start
 session_set_cookie_params([
     'lifetime' => 0,
