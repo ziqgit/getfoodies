@@ -8,7 +8,7 @@ session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
     'domain' => 'getfoodies.website',
-    'secure' => false,                // set to true when using HTTPS
+    'secure' => true,                // set to true when using HTTPS
     'httponly' => true,
     'samesite' => 'Strict'
 ]);
