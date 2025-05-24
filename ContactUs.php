@@ -187,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($errors)) { // If everything's OK.
 
         // Register the user in the database...
-        require ('../mysqli_connect.php'); // Connect to the db.
+        require ('mysqli_connect.php'); // Connect to the db.
 
         // Make the query:
         $q = "INSERT INTO message (first_name, last_name, email, phone_no, Message,Send_date) 
