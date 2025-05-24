@@ -3,6 +3,14 @@ header('X-Frame-Options: DENY');
 header("Content-Security-Policy: frame-ancestors 'none';");
 header("Content-Security-Policy: default-src 'self'; script-src 'self' https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com; img-src 'self' data: https:; font-src 'self' https://maxcdn.bootstrapcdn.com; connect-src 'self'; frame-src 'self'; object-src 'none';");
 
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => 'getfoodies.website',
+    'secure' => false,                // Set to true for HTTPS
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
 // Start session and generate CSRF token if not set
 session_start();
 if (empty($_SESSION['csrf_token'])) {
