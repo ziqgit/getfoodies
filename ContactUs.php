@@ -1,7 +1,6 @@
 <?php
 header('X-Frame-Options: DENY');
-header("Content-Security-Policy: frame-ancestors 'none';");
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; frame-src 'self' https://www.google.com https://www.google.com/maps; script-src 'self';");
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; frame-src 'self' https://www.google.com https://www.google.com/maps; script-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';");
 
 session_set_cookie_params([
     'lifetime' => 0,
