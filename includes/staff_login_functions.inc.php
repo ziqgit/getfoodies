@@ -11,6 +11,10 @@
 function check_staff_login($dbc, $email = '', $pass1 = '') {
     $errors = array(); // Initialize error array.
 
+    // Define lockout parameters
+	$max_failed_attempts = 5; // Maximum allowed failed attempts
+	$lockout_duration = 1800; // Lockout duration in seconds (30 minutes)
+
     // Validate the email address:
     if (empty($email)) {
         $errors[] = 'You forgot to enter your email address.';
@@ -30,7 +34,7 @@ function check_staff_login($dbc, $email = '', $pass1 = '') {
     if (empty($errors)) { // If everything's OK.
         // Retrieve the id, name, and password for that email:
         // Use prepared statements to prevent SQL injection
-        $q = "SELECT id, name, password FROM staff WHERE email = ?";
+        $q = "SELECT id, name, password, failed_login_attempts, account_status, lockout_time FROM staff WHERE email = ?";
         $stmt = mysqli_prepare($dbc, $q);
         mysqli_stmt_bind_param($stmt, 's', $e);
         mysqli_stmt_execute($stmt);
@@ -45,36 +49,103 @@ function check_staff_login($dbc, $email = '', $pass1 = '') {
             // Trim whitespace from the retrieved password hash
             $stored_hash = trim($row['password']);
 
+            // **TEMPORARY LOGGING:** Log the provided password, stored hash, and verification result
+            // error_log("Staff Login Attempt: Email=".$e.", Provided Password=".(isset($p)?$p:'EMPTY').", Stored Hash=".(isset($stored_hash)?$stored_hash:'NOT RETRIEVED').", password_verify Result=".(isset($p) && isset($stored_hash) && password_verify($p, $stored_hash) ? 'true' : 'false'));
+
+            // Check if account is locked
+            if ($row['account_status'] === 'locked') {
+                $lockout_timestamp = strtotime($row['lockout_time']);
+                if (time() - $lockout_timestamp < $lockout_duration) {
+                    $time_remaining = $lockout_duration - (time() - $lockout_timestamp);
+                    $minutes_remaining = ceil($time_remaining / 60);
+                    $errors[] = 'Account locked due to too many failed login attempts. Please try again in about ' . $minutes_remaining . ' minute(s).';
+                    return array(false, $errors);
+                } else {
+                    // Lockout expired, reset failed attempts and status
+                    $reset_q = "UPDATE staff SET failed_login_attempts = 0, account_status = 'active', lockout_time = NULL WHERE id = ?";
+                    $reset_stmt = mysqli_prepare($dbc, $reset_q);
+                    mysqli_stmt_bind_param($reset_stmt, 'i', $row['id']);
+                    mysqli_stmt_execute($reset_stmt);
+                }
+            }
+
+            // Apply progressive delay based on failed attempts (if not locked)
+            if ($row['failed_login_attempts'] > 0) {
+                sleep(min(pow(2, $row['failed_login_attempts']), 60)); // Cap delay at 60 seconds
+            }
+
             // Verify the password against the stored hash
             // SHA1 hashes are 40 characters long in hex representation
             if (strlen($stored_hash) === 40 && password_verify($p, $stored_hash)) {
                 // Password matches, but it's an old SHA1 hash. Re-hash and update.
                 $new_hash = password_hash($p, PASSWORD_DEFAULT);
-                $update_q = "UPDATE staff SET password = ? WHERE id = ?";
+                $update_q = "UPDATE staff SET password = ?, failed_login_attempts = 0, account_status = 'active', lockout_time = NULL WHERE id = ?";
                 $update_stmt = mysqli_prepare($dbc, $update_q);
                 mysqli_stmt_bind_param($update_stmt, 'si', $new_hash, $row['id']);
                 mysqli_stmt_execute($update_stmt);
                 // Optionally check for update success or log an error
-                 error_log("Re-hashed password for staff user ID: " . $row['id']);
+                 error_log("Re-hashed password and reset login attempts for staff user ID: " . $row['id']);
+
+                 // Return true and the record (excluding sensitive data)
+                unset($row['password']);
+                unset($row['failed_login_attempts']);
+                unset($row['account_status']);
+                unset($row['lockout_time']);
+
+                return array(true, $row);
+
             } else if (password_verify($p, $stored_hash)) {
                  // Password matches the modern hash. No re-hashing needed.
+
+                 // Reset failed attempts and status on successful login
+                 if ($row['failed_login_attempts'] > 0 || $row['account_status'] === 'locked') {
+                    $reset_q = "UPDATE staff SET failed_login_attempts = 0, account_status = 'active', lockout_time = NULL WHERE id = ?";
+                    $reset_stmt = mysqli_prepare($dbc, $reset_q);
+                    mysqli_stmt_bind_param($reset_stmt, 'i', $row['id']);
+                    mysqli_stmt_execute($reset_stmt);
+                    // Optionally check for update success or log error
+                     error_log("Reset login attempts for staff user ID: " . $row['id']);
+                 }
+
+                 // Return true and the record (excluding sensitive data)
+                unset($row['password']);
+                unset($row['failed_login_attempts']);
+                unset($row['account_status']);
+                unset($row['lockout_time']);
+
+                return array(true, $row);
+
             } else {
                 // Password does not match
                 $errors[] = 'The email address and password entered do not match.';
-                 // Consider adding brute-force protection logic here
+
+                // Increment failed login attempts
+                $new_attempts = ($row['failed_login_attempts'] ?? 0) + 1; // Use null coalescing operator for safety
+                $update_q = "UPDATE staff SET failed_login_attempts = ?, last_failed_login = NOW() WHERE id = ?";
+                $update_stmt = mysqli_prepare($dbc, $update_q);
+                mysqli_stmt_bind_param($update_stmt, 'ii', $new_attempts, $row['id']);
+                mysqli_stmt_execute($update_stmt);
+                // Optionally check for update success or log error
+                error_log("Incremented failed login attempts for staff user ID: " . $row['id'] . ": " . $new_attempts);
+
+                // Check if lockout threshold is reached and lock account
+                if ($new_attempts >= $max_failed_attempts) {
+                    $lock_q = "UPDATE staff SET account_status = 'locked', lockout_time = NOW() WHERE id = ?";
+                    $lock_stmt = mysqli_prepare($dbc, $lock_q);
+                    mysqli_stmt_bind_param($lock_stmt, 'i', $row['id']);
+                    mysqli_stmt_execute($lock_stmt);
+                    // Optionally check for update success or log error
+                    error_log("Account locked for staff user ID: " . $row['id']);
+                    $errors[] = 'Account locked due to too many failed login attempts. Please try again later.'; // Add a general lockout message
+                }
+
             }
 
-            // If there are no password verification errors, return success
-            if(empty($errors)){
-                 // Return true and the record (excluding the password hash)
-                unset($row['password']); // Unset the original password field
-                return array(true, $row);
-            }
-            
         } else { 
             // Email not found or multiple users with the same email (shouldn't happen if email is unique)
             $errors[] = 'The email address and password entered do not match.';
-             // Consider adding brute-force protection logic here (for invalid emails)
+            // Note: For security, we don't reveal if the email exists vs password is wrong.
+            // We could implement IP-based rate limiting here if needed, but user-based is already handled above.
         }
         
     } // End of empty($errors) IF.
