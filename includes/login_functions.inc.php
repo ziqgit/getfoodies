@@ -66,9 +66,14 @@ function check_login($dbc, $email = '', $pass1 = '') {
 
 			// Fetch the record:
 			$row = mysqli_fetch_array ($result, MYSQLI_ASSOC);
-	
+
+            // **TEMPORARY LOGGING:** Log the provided password, stored hash, and verification result
+            error_log("Login Attempt: Email=".$e.", Provided Password=".(isset($p)?$p:'EMPTY').", Stored Hash=".(isset($row['password'])?$row['password']:'NOT RETRIEVED').", password_verify Result=".(isset($p) && isset($row['password']) && password_verify($p, $row['password']) ? 'true' : 'false'));
+
 			// Verify the password against the stored hash
+            // SHA1 hashes are 40 characters long in hex representation
             if (strlen($row['password']) === 40 && password_verify($p, $row['password'])) {
+                // Password matches, but it's an old SHA1 hash. Re-hash and update.
                 $new_hash = password_hash($p, PASSWORD_DEFAULT);
                 $update_q = "UPDATE admin SET password = ? WHERE user_id = ?";
                 $update_stmt = mysqli_prepare($dbc, $update_q);
