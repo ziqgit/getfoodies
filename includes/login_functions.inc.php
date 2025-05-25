@@ -67,12 +67,15 @@ function check_login($dbc, $email = '', $pass1 = '') {
 			// Fetch the record:
 			$row = mysqli_fetch_array ($result, MYSQLI_ASSOC);
 
+            // Trim whitespace from the retrieved password hash
+            $stored_hash = trim($row['password']);
+
             // **TEMPORARY LOGGING:** Log the provided password, stored hash, and verification result
-            error_log("Login Attempt: Email=".$e.", Provided Password=".(isset($p)?$p:'EMPTY').", Stored Hash=".(isset($row['password'])?$row['password']:'NOT RETRIEVED').", password_verify Result=".(isset($p) && isset($row['password']) && password_verify($p, $row['password']) ? 'true' : 'false'));
+            error_log("Login Attempt: Email=".$e.", Provided Password=".(isset($p)?$p:'EMPTY').", Stored Hash=".(isset($stored_hash)?$stored_hash:'NOT RETRIEVED').", password_verify Result=".(isset($p) && isset($stored_hash) && password_verify($p, $stored_hash) ? 'true' : 'false'));
 
 			// Verify the password against the stored hash
             // SHA1 hashes are 40 characters long in hex representation
-            if (strlen($row['password']) === 40 && password_verify($p, $row['password'])) {
+            if (strlen($stored_hash) === 40 && password_verify($p, $stored_hash)) {
                 // Password matches, but it's an old SHA1 hash. Re-hash and update.
                 $new_hash = password_hash($p, PASSWORD_DEFAULT);
                 $update_q = "UPDATE admin SET password = ? WHERE user_id = ?";
@@ -81,7 +84,7 @@ function check_login($dbc, $email = '', $pass1 = '') {
                 mysqli_stmt_execute($update_stmt);
                 // Optionally check for update success or log an error
                 error_log("Re-hashed password for admin user ID: " . $row['user_id']);
-            } else if (password_verify($p, $row['password'])) {
+            } else if (password_verify($p, $stored_hash)) {
                  // Password matches the modern hash. No re-hashing needed.
             } else {
                 // Password does not match
@@ -92,7 +95,7 @@ function check_login($dbc, $email = '', $pass1 = '') {
             // If there are no password verification errors, return success
             if(empty($errors)){
                  // Return true and the record (excluding the password hash)
-                unset($row['password']);
+                unset($row['password']); // Unset the original password field
                 return array(true, $row);
             }
 			
