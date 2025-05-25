@@ -1,7 +1,6 @@
 <?php
 header('X-Frame-Options: DENY');
-header("Content-Security-Policy: frame-ancestors 'none';");
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src 'self'; script-src 'self';");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self';");
 ?>
 
 <html lang="en">
