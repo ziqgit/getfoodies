@@ -24,7 +24,6 @@
 </head>
 <body>
 <?php 
-session_start();
 
 // This page prints any errors associated with logging in
 // and it creates the entire login page, including the form.
@@ -35,10 +34,13 @@ include ('includes/header.html');
 
 // Retrieve any error messages from the session:
 $email_error = $password_error = '';
+$lockout_message = '';
 
 if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
     foreach ($_SESSION['errors'] as $msg) {
-        if (strpos($msg, 'email') !== false) {
+        if (strpos($msg, 'locked') !== false) {
+            $lockout_message = $msg;
+        } elseif (strpos($msg, 'email') !== false) {
             $email_error = $msg;
         } elseif (strpos($msg, 'password') !== false) {
             $password_error = $msg;
@@ -49,6 +51,11 @@ if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])) {
 ?>
 
 <div class="wrapper">
+    <?php if (!empty($lockout_message)): ?>
+        <div class="alert alert-danger" style="color: red; text-align: center; font-size: 16px; margin-bottom: 20px; padding: 10px; border: 1px solid red; background-color: #fff; border-radius: 5px;">
+            <?php echo $lockout_message; ?>
+        </div>
+    <?php endif; ?>
     <form class="form-signin" action="login.php" method="post">
     <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
         <h1 id="logo">Login</h1>
