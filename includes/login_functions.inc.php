@@ -39,33 +39,62 @@ function check_login($dbc, $email = '', $pass1 = '') {
 	if (empty($email)) {
 		$errors[] = 'You forgot to enter your email address.';
 	} else {
-		$e = mysqli_real_escape_string($dbc, trim($email));
+		// Use prepared statements to prevent SQL injection
+		$e = trim($email);
 	}
 
 	// Validate the password:
 	if (empty($pass1)) {
 		$errors[] = 'You forgot to enter your password.';
 	} else {
-		$p = mysqli_real_escape_string($dbc, trim($pass1)); 
+		// No need to escape password yet, will be verified against hash
+		$p = trim($pass1); 
 	}
 
 	if (empty($errors)) { // If everything's OK.
 
-		// Retrieve the user_id and first_name for that email/password combination:
-		$q = "SELECT user_id, name FROM admin WHERE email='$e' AND password=SHA1('$p')";		
-		$r = @mysqli_query ($dbc, $q); // Run the query.
+		// Retrieve the user_id, name, and password for that email:
+        // Use prepared statements to prevent SQL injection
+		$q = "SELECT user_id, name, password FROM admin WHERE email = ?";
+		$stmt = mysqli_prepare($dbc, $q);
+        mysqli_stmt_bind_param($stmt, 's', $e);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
 		
 		// Check the result:
-		if (mysqli_num_rows($r) == 1) {
+		if (mysqli_num_rows($result) == 1) {
 
 			// Fetch the record:
-			$row = mysqli_fetch_array ($r, MYSQLI_ASSOC);
+			$row = mysqli_fetch_array ($result, MYSQLI_ASSOC);
 	
-			// Return true and the record:
-			return array(true, $row);
+			// Verify the password against the stored hash
+            if (strlen($row['password']) === 40 && password_verify($p, $row['password'])) {
+                $new_hash = password_hash($p, PASSWORD_DEFAULT);
+                $update_q = "UPDATE admin SET password = ? WHERE user_id = ?";
+                $update_stmt = mysqli_prepare($dbc, $update_q);
+                mysqli_stmt_bind_param($update_stmt, 'si', $new_hash, $row['user_id']);
+                mysqli_stmt_execute($update_stmt);
+                // Optionally check for update success or log an error
+                error_log("Re-hashed password for admin user ID: " . $row['user_id']);
+            } else if (password_verify($p, $row['password'])) {
+                 // Password matches the modern hash. No re-hashing needed.
+            } else {
+                // Password does not match
+                $errors[] = 'The email address and password entered do not match.';
+                // Consider adding brute-force protection logic here
+            }
+
+            // If there are no password verification errors, return success
+            if(empty($errors)){
+                 // Return true and the record (excluding the password hash)
+                unset($row['password']);
+                return array(true, $row);
+            }
 			
-		} else { // Not a match!
+		} else { 
+            // Email not found or multiple users with the same email (shouldn't happen if email is unique)
 			$errors[] = 'The email address and password entered do not match.';
+            // Consider adding brute-force protection logic here (for invalid emails)
 		}
 		
 	} // End of empty($errors) IF.
