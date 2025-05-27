@@ -6,16 +6,19 @@
 <?php 
 
 $page_title = 'Staff Login';
-include ('includes/header.html');
+include_once ('includes/header.html');
 $email_error = $password_error = '';
 $lockout_message = '';
 $general_errors = [];
 $all_errors_to_display = [];
+$match_error_message = '';
 
 if (isset($_SESSION['staff_errors']) && !empty($_SESSION['staff_errors'])) {
     foreach ($_SESSION['staff_errors'] as $msg) {
         if (strpos($msg, 'locked') !== false || strpos($msg, 'Too many failed login attempts from your IP address') !== false) {
             $lockout_message = $msg;
+        } else if ($msg === 'The email address and password entered do not match.') {
+            $match_error_message = $msg;
         } else if (strpos($msg, 'email address') !== false) {
             $email_error = $msg;
         } else if (strpos($msg, 'password') !== false) {
@@ -50,7 +53,12 @@ if (isset($_SESSION['staff_errors']) && !empty($_SESSION['staff_errors'])) {
 </div>
 <div class="background-slider"></div>
 <?php 
-// Display any collected error messages:
+// Display the specific match error if it exists
+if (!empty($match_error_message)) {
+    echo '<p class="errorp">' . $match_error_message . '</p>';
+}
+
+// Display any other collected error messages in the container:
 if (isset($all_errors_to_display) && !empty($all_errors_to_display)) {
     echo '<div class="error-container">
         <h2 class="error-title">Error!</h2>
