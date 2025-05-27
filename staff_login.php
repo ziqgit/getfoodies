@@ -8,7 +8,7 @@ session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
     'domain' => 'getfoodies.website',
-    'secure' => true,                // set to true when using HTTPS
+    'secure' => false,                // set to true when using HTTPS
     'httponly' => true,
     'samesite' => 'Strict'
 ]);
@@ -38,22 +38,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     require ('mysqli_connect.php');
     require ('includes/email_verification_functions.inc.php');
     
-    // Secure Session Configuration
-    session_start();
-    ini_set('session.cookie_httponly', '1');
-    ini_set('session.cookie_secure', '1');
-    ini_set('session.cookie_samesite', 'Strict');
+    // Get client IP address
+    $ip_address = $_SERVER['REMOTE_ADDR'];
 
+    // Log IP and current failed attempts at the start of the request
+    $initial_ip_check_q = "SELECT failed_attempts FROM ip_failed_logins WHERE ip_address = ?";
+    $initial_ip_check_stmt = mysqli_prepare($dbc, $initial_ip_check_q);
+    if ($initial_ip_check_stmt) {
+        mysqli_stmt_bind_param($initial_ip_check_stmt, 's', $ip_address);
+        mysqli_stmt_execute($initial_ip_check_stmt);
+        $initial_ip_check_result = mysqli_stmt_get_result($initial_ip_check_stmt);
+        if ($initial_ip_check_row = mysqli_fetch_assoc($initial_ip_check_result)) {
+            error_log("staff_login.php: Start of request for IP " . $ip_address . ". Initial failed attempts from DB: " . $initial_ip_check_row['failed_attempts']);
+        } else {
+            error_log("staff_login.php: Start of request for IP " . $ip_address . ". IP not found in ip_failed_logins table initially.");
+        }
+    } else {
+        error_log("staff_login.php: Failed to prepare initial IP check statement: " . mysqli_error($dbc));
+    }
+    
     // Check the login:
     list ($check, $data) = check_staff_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
     
     if ($check) { // Login successful
         // Generate and store verification code
         $code = generate_verification_code();
-        error_log("Generated verification code: " . $code);
+        error_log("Generated verification code for staff: " . $code);
         
         if (store_verification_code($dbc, $data['id'], $code, false)) {
-            error_log("Stored verification code in database");
+            error_log("Stored verification code for staff in database");
             
             // Get user's email
             $q = "SELECT email FROM staff WHERE id = ?";
