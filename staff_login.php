@@ -19,6 +19,11 @@ session_start(); // Start session
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+// Include helper files:
+require ('includes/staff_login_functions.inc.php');
+require ('mysqli_connect.php');
+
 ?>
 
 <?php 
@@ -33,9 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("⚠️ CSRF validation failed! Request blocked.");
     }
 
-    // Include helper files:
-    require ('includes/staff_login_functions.inc.php');
-    require ('mysqli_connect.php');
+    // Include email verification functions (only needed on POST)
     require ('includes/email_verification_functions.inc.php');
     
     // Get client IP address
