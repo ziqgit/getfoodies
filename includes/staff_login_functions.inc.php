@@ -62,10 +62,10 @@ function check_staff_login($dbc, $email = '', $pass1 = '') {
     // Validate the password:
     if (empty($pass1)) {
         $errors[] = 'You forgot to enter your password.';
-    } else {
-        // No need to escape password yet, will be verified against hash
-        $p = trim($pass1);
-    }
+    } 
+
+    // Trim password regardless of whether it was empty
+    $p = trim($pass1);
 
     if (empty($errors)) { // If everything's OK.
         // Retrieve the id, name, and password for that email:
