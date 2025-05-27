@@ -34,19 +34,21 @@ function check_staff_login($dbc, $email = '', $pass1 = '') {
         $ip_lockout_until = strtotime($ip_row['lockout_until']);
 
         if ($ip_lockout_until > time()) {
+            // IP is currently locked
             $time_remaining = $ip_lockout_until - time();
             $minutes_remaining = ceil($time_remaining / 60);
             $errors[] = 'Too many failed login attempts from your IP address. Please try again in about ' . $minutes_remaining . ' minute(s).';
-            error_log("check_staff_login: IP address " . $ip_address . " is locked.");
+            error_log("check_staff_login: IP address " . $ip_address . " is locked. Lockout until: " . $ip_row['lockout_until']);
             return array(false, $errors);
-        } else {
-            // IP lockout expired, reset failed attempts for this IP
+        } else if ($ip_row['lockout_until'] !== NULL) {
+            // IP lockout has expired, reset failed attempts for this IP
             $reset_ip_q = "UPDATE ip_failed_logins SET failed_attempts = 0, lockout_until = NULL WHERE ip_address = ?";
             $reset_ip_stmt = mysqli_prepare($dbc, $reset_ip_q);
             mysqli_stmt_bind_param($reset_ip_stmt, 's', $ip_address);
             mysqli_stmt_execute($reset_ip_stmt);
             error_log("check_staff_login: IP lockout expired for " . $ip_address . ". Resetting attempts.");
         }
+        // If lockout_until is NULL, it means the IP wasn't locked, so do nothing here.
     }
 
     // Validate the email address:
