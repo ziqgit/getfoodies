@@ -9,19 +9,26 @@ $page_title = 'Staff Login';
 include ('includes/header.html');
 $email_error = $password_error = '';
 $lockout_message = '';
+$general_errors = [];
 
 if (isset($_SESSION['staff_errors']) && !empty($_SESSION['staff_errors'])) {
     foreach ($_SESSION['staff_errors'] as $msg) {
-        if (strpos($msg, 'locked') !== false) {
+        if (strpos($msg, 'locked') !== false || strpos($msg, 'Too many failed login attempts from your IP address') !== false) {
             $lockout_message = $msg;
         } elseif (strpos($msg, 'email') !== false) {
             $email_error = $msg;
         } elseif (strpos($msg, 'password') !== false) {
             $password_error = $msg;
+        } else {
+            // Add other non-lockout/email/password errors to a general errors array for display
+            $general_errors[] = $msg;
         }
     }
     unset($_SESSION['staff_errors']);
 }
+
+// Combine email, password, and general errors for the main error display
+$all_errors = array_merge(array_filter([$email_error, $password_error]), $general_errors ?? []);
 ?>
 <div class="wrapper">
     <?php if (!empty($lockout_message)): ?>
@@ -44,6 +51,17 @@ if (isset($_SESSION['staff_errors']) && !empty($_SESSION['staff_errors'])) {
     </form>
 </div>
 <div class="background-slider"></div>
+<?php 
+// Display any error messages:
+if (isset($all_errors) && !empty($all_errors)) {
+    echo '<h1 id="erorrh1">Error!</h1>
+    <p class="errorp">The following error(s) occurred:<br />';
+    foreach ($all_errors as $msg) {
+        echo " - $msg<br />\n";
+    }
+    echo '</p><p>Please try again.</p>';
+}
+?>
 <?php include ('includes/footer_loggedin.html'); ?>
 </body>
 </html> 
