@@ -287,7 +287,8 @@ function increment_ip_failed_attempts($dbc, $ip_address, $max_attempts, $lockout
             error_log("increment_ip_failed_attempts: IP lockout threshold reached. Locking IP " . $ip_address . " until " . $lockout_until);
         }
 
-    } else {\n        // IP does not exist, insert new record
+    } else {
+        // IP does not exist, insert new record
         $insert_q = "INSERT INTO ip_failed_logins (ip_address, failed_attempts, last_attempt_time) VALUES (?, 1, NOW())";
         $insert_stmt = mysqli_prepare($dbc, $insert_q);
         mysqli_stmt_bind_param($insert_stmt, 's', $ip_address);
