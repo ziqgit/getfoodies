@@ -61,6 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     // Check the login:
+    // Temporarily check if the function exists before calling
+    if (!function_exists('check_staff_login')) {
+        error_log("check_staff_login function does NOT exist right before call on line " . __LINE__);
+    }
     list ($check, $data) = check_staff_login($dbc, $_REQUEST['email'], $_REQUEST['pass1']);
     
     if ($check) { // Login successful
