@@ -16,8 +16,12 @@ if (isset($_SESSION['staff_errors']) && !empty($_SESSION['staff_errors'])) {
     foreach ($_SESSION['staff_errors'] as $msg) {
         if (strpos($msg, 'locked') !== false || strpos($msg, 'Too many failed login attempts from your IP address') !== false) {
             $lockout_message = $msg;
+        } else if (strpos($msg, 'email address') !== false) {
+            $email_error = $msg;
+        } else if (strpos($msg, 'password') !== false) {
+            $password_error = $msg;
         } else {
-            // Add all non-lockout errors directly to the display array
+            // Add all other errors to the display array
             $all_errors_to_display[] = $msg;
         }
     }
