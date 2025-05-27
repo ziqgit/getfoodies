@@ -213,6 +213,13 @@ function check_login($dbc, $email = '', $pass1 = '') {
                 // Log user failed attempt increment
                 error_log("check_login: Password mismatch for user ID: " . $row['user_id'] . ". Incremented user failed attempts to: " . $new_attempts_user . ". Update success: " . ($update_success_user ? 'true' : 'false'));
 
+                // Add attempts remaining warning if not yet locked
+                if ($new_attempts_user < $max_failed_attempts_user) {
+                    $attempts_remaining = $max_failed_attempts_user - $new_attempts_user;
+                    $errors[] = 'You have ' . $attempts_remaining . ' login attempt(s) remaining before your account is locked.';
+                    error_log("check_login: User ID " . $row['user_id'] . " has " . $attempts_remaining . " attempts remaining.");
+                }
+
                 // Check if user lockout threshold is reached and lock account
                 if ($new_attempts_user >= $max_failed_attempts_user) {
                     $lock_q = "UPDATE admin SET account_status = 'locked', lockout_time = NOW() WHERE user_id = ?";
