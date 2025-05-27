@@ -235,9 +235,14 @@ function check_staff_login($dbc, $email = '', $pass1 = '') {
 
 // Helper function to increment IP failed attempts and apply IP lockout
 function increment_ip_failed_attempts($dbc, $ip_address, $max_attempts, $lockout_duration) {
+    error_log("increment_ip_failed_attempts: Processing IP: " . $ip_address);
     // Check if IP exists in the table
     $check_q = "SELECT failed_attempts FROM ip_failed_logins WHERE ip_address = ?";
     $check_stmt = mysqli_prepare($dbc, $check_q);
+    if (!$check_stmt) {
+        error_log("increment_ip_failed_attempts: Failed to prepare select statement: " . mysqli_error($dbc));
+        return;
+    }
     mysqli_stmt_bind_param($check_stmt, 's', $ip_address);
     mysqli_stmt_execute($check_stmt);
     $result = mysqli_stmt_get_result($check_stmt);
@@ -245,40 +250,60 @@ function increment_ip_failed_attempts($dbc, $ip_address, $max_attempts, $lockout
     if (mysqli_num_rows($result) > 0) {
         // IP exists, update failed attempts
         $row = mysqli_fetch_assoc($result);
-        $new_attempts = $row['failed_attempts'] + 1;
+        $current_attempts = $row['failed_attempts'];
+        $new_attempts = $current_attempts + 1;
+        error_log("increment_ip_failed_attempts: IP found. Current attempts: " . $current_attempts . ". New attempts: " . $new_attempts);
 
         $update_q = "UPDATE ip_failed_logins SET failed_attempts = ?, last_attempt_time = NOW() WHERE ip_address = ?";
         $update_stmt = mysqli_prepare($dbc, $update_q);
+        if (!$update_stmt) {
+            error_log("increment_ip_failed_attempts: Failed to prepare update statement: " . mysqli_error($dbc));
+            return;
+        }
         mysqli_stmt_bind_param($update_stmt, 'is', $new_attempts, $ip_address);
-        mysqli_stmt_execute($update_stmt);
+        $update_success = mysqli_stmt_execute($update_stmt);
 
-        error_log("increment_ip_failed_attempts: Incremented failed attempts for IP " . $ip_address . " to " . $new_attempts);
+        error_log("increment_ip_failed_attempts: Updated failed attempts for IP " . $ip_address . " to " . $new_attempts . ". Update success: " . ($update_success ? 'true' : 'false'));
 
         // Check if IP lockout threshold is reached
         if ($new_attempts >= $max_attempts) {
             $lockout_until = date('Y-m-d H:i:s', time() + $lockout_duration);
             $lock_q = "UPDATE ip_failed_logins SET lockout_until = ? WHERE ip_address = ?";
             $lock_stmt = mysqli_prepare($dbc, $lock_q);
+             if (!$lock_stmt) {
+                error_log("increment_ip_failed_attempts: Failed to prepare lockout statement: " . mysqli_error($dbc));
+                return;
+            }
             mysqli_stmt_bind_param($lock_stmt, 'ss', $lockout_until, $ip_address);
-            mysqli_stmt_execute($lock_stmt);
-            error_log("increment_ip_failed_attempts: IP lockout threshold reached. Locking IP " . $ip_address . " until " . $lockout_until);
+            $lock_success = mysqli_stmt_execute($lock_stmt);
+            error_log("increment_ip_failed_attempts: IP lockout threshold reached. Locking IP " . $ip_address . " until " . $lockout_until . ". Lock success: " . ($lock_success ? 'true' : 'false'));
         }
 
     } else {
         // IP does not exist, insert new record
+        error_log("increment_ip_failed_attempts: IP not found. Inserting new record for IP " . $ip_address);
         $insert_q = "INSERT INTO ip_failed_logins (ip_address, failed_attempts, last_attempt_time) VALUES (?, 1, NOW())";
         $insert_stmt = mysqli_prepare($dbc, $insert_q);
+         if (!$insert_stmt) {
+            error_log("increment_ip_failed_attempts: Failed to prepare insert statement: " . mysqli_error($dbc));
+            return;
+        }
         mysqli_stmt_bind_param($insert_stmt, 's', $ip_address);
-        mysqli_stmt_execute($insert_stmt);
-        error_log("increment_ip_failed_attempts: New record for IP " . $ip_address . ". Failed attempts: 1.");
+        $insert_success = mysqli_stmt_execute($insert_stmt);
+        error_log("increment_ip_failed_attempts: New record insertion for IP " . $ip_address . ". Failed attempts: 1. Insert success: " . ($insert_success ? 'true' : 'false'));
     }
 }
 
 // Helper function to reset IP failed attempts on successful login
 function reset_ip_failed_attempts($dbc, $ip_address) {
+     error_log("reset_ip_failed_attempts: Attempting to reset failed attempts for IP " . $ip_address);
     $reset_q = "UPDATE ip_failed_logins SET failed_attempts = 0, lockout_until = NULL WHERE ip_address = ?";
     $reset_stmt = mysqli_prepare($dbc, $reset_q);
+     if (!$reset_stmt) {
+        error_log("reset_ip_failed_attempts: Failed to prepare reset statement: " . mysqli_error($dbc));
+        return;
+    }
     mysqli_stmt_bind_param($reset_stmt, 's', $ip_address);
-    mysqli_stmt_execute($reset_stmt);
-    error_log("reset_ip_failed_attempts: Resetting failed attempts for IP " . $ip_address);
+    $reset_success = mysqli_stmt_execute($reset_stmt);
+    error_log("reset_ip_failed_attempts: Resetting failed attempts for IP " . $ip_address . ". Success: " . ($reset_success ? 'true' : 'false'));
 } 
