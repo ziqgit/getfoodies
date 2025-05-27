@@ -147,4 +147,16 @@ input[type="submit"]:active {
 
 .form-control.error-border {
     border-color: red;
+}
+
+.erorrh1 {
+    color: red;
+    text-align: center;
+    font-size: 50px;
+}
+
+.errorp {
+    color: red;
+    text-align: center;
+    font-size: 15px;
 } 
