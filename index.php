@@ -1,6 +1,6 @@
 <?php
 header('X-Frame-Options: DENY');
- header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none' frame-ancestors 'none'; form-action 'self'; base-uri 'self';");
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://maxcdn.bootstrapcdn.com; img-src 'self'; font-src 'self' https://maxcdn.bootstrapcdn.com; object-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';");
 
         $page_title = 'Homepage';
         include ('includes/header.html');
