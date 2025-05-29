@@ -1,6 +1,6 @@
 <?php
 header("X-Frame-Options: DENY");
-header("Content-Security-Policy: frame-ancestors 'none';");
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://maxcdn.bootstrapcdn.com; img-src 'self'; font-src 'self' https://maxcdn.bootstrapcdn.com; object-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';");
 
 // ✅ Set cookie parameters BEFORE session_start
 session_set_cookie_params([
