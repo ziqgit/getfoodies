@@ -11,6 +11,7 @@
     form-action 'self'; 
     base-uri 'self';"
 );
+?>
 <html>
   <?php
         $page_title = 'Menu';
