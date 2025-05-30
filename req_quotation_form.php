@@ -1,6 +1,16 @@
 <?php
 header('X-Frame-Options: DENY');
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com; img-src 'self' data: https:; font-src 'self' https://maxcdn.bootstrapcdn.com; object-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; connect-src 'self'; frame-src 'self';");
+header("Content-Security-Policy: 
+    default-src 'self'; 
+    script-src 'self' 'unsafe-inline'; 
+    style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com; 
+    img-src 'self' data:; 
+    font-src 'self' https://maxcdn.bootstrapcdn.com; 
+    object-src 'none'; 
+    frame-ancestors 'none'; 
+    form-action 'self'; 
+    base-uri 'self';"
+);
 
 session_set_cookie_params([
     'lifetime' => 0,
